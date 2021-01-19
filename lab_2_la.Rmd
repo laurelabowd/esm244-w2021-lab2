@@ -84,4 +84,37 @@ ggplot(data = fish_noaa, aes(x = year, y = pounds, group = nmfs_name)) +
   gghighlight(max(pounds) > 1e8)
 ```
 
+# Read inn from a URL, lubridate, mutate and make a graph with months in a logical order
+
+```{r}
+monroe_wt <- read_csv("https://data.bloomington.in.gov/dataset/2c81cfe3-62c2-46ed-8fcf-83c1880301d1/resource/13c8f7aa-af51-4008-80a9-56415c7c931e/download/mwtpdailyelectricitybclear.csv") %>% 
+  clean_names() 
+```
+
+```{r}
+monroe_ts <- monroe_wt %>% 
+  mutate(date = mdy(date)) %>% 
+  mutate(record_month = month(date)) %>% 
+  mutate(month_name = month.abb[record_month]) %>% 
+  mutate(month_name = fct_reorder(month_name, record_month))
+
+ggplot(data = monroe_ts, aes(month_name, y = total_k_wh)) + 
+  geom_jitter()
+```
+
+# Part 3: Compound figures with 'patchwork' | puts graphs side by side / puts graph one over the other
+
+```{r}
+graph_a <- ggplot(data = penguins, aes(x = body_mass_g, y = flipper_length_mm)) +
+  geom_point()
+
+graph_b <- ggplot(data = penguins, aes(x = species, y = flipper_length_mm)) +
+  geom_jitter(aes(color = species), show.legend = FALSE)
+
+graph_c <- (graph_a | graph_b) / fish_plot & theme_dark()
+
+graph_c
+
+ggsave(here("fig", "graph_c_la.png"), width = 5, height = 6)
+```
 
